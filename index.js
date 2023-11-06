@@ -6,6 +6,7 @@ require("dotenv").config()
 const db = mysql.createConnection({
     host:"localhost",
     user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: 3306
 })
@@ -25,13 +26,13 @@ function mainMenu(){
         if(answer.selection==="view all departments"){
             viewDepartments()
         }else if(answer.selection==="view all roles"){
-
+            viewRoles()
         }else if(answer.selection==="view all employees"){
             viewEmployees()
         }else if(answer.selection==="add a department"){
-
+            addDepartment()
         }else if(answer.selection==="add a role"){
-
+            addRole()
         }else if(answer.selection==="add an employee"){
             addEmployee()
         }else if(answer.selection==="update an employee role"){
@@ -41,7 +42,16 @@ function mainMenu(){
 }
 
 function viewDepartments(){
-    db.query("SELECT id as value, title as name from department", (err, data) =>{
+    db.query(`SELECT department.id, name as department FROM department`, (err, data) =>{
+        printTable(data)
+        mainMenu()
+    })
+}
+
+function viewRoles(){
+    db.query(`SELECT role.id, title, salary, name as department 
+    from role LEFT JOIN 
+    department on department.id = role.department_id;`, (err, data) =>{
         printTable(data)
         mainMenu()
     })
@@ -56,6 +66,52 @@ function viewEmployees(){
         printTable(data)
         mainMenu()
     })
+}
+
+function addDepartment(){
+    dbquery("SELECT id as value, name from department", (err, departmentData) =>{
+        inquirer.prompt([
+            {
+                type:"input",
+                message:"What is the name of the Department?",
+                name:"department_name"
+            }
+        ]).then(answer =>{
+            db.query("INSERT INTO department (department_name) VALUE(?)", [answer, department_name], err=>{
+                viewDepartments()
+            })
+        })
+    })
+}
+
+function addRole(){
+    db.query("SELECT id as value, title as name from role"), (err, roleData) =>{
+        db.query("SELECT department_id as value, title as name FROM role", (err, managerData) =>{
+         inquirer.prompt([
+            {
+                type:"input",
+                message:"What is the name of the role?",
+                name:"title"
+
+            },
+            {
+                type:"input",
+                message:"What is the salary of the role?",
+                name:"salary"
+            },
+            {
+                type:"list",
+                message:"Which department does the role belong to?",
+                name:"role_id",
+                choices: roleData
+            }
+         ]).then(answer =>{
+            db.query("INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES(?,?,?)", [answer, title, answer, salary, answer, role_id], err=>{
+                viewRoles()
+            })
+         })  
+        }
+    )}
 }
 
 function addEmployee(){
@@ -78,7 +134,8 @@ function addEmployee(){
                 message:"Choose the following title:",
                 name:"role_id",
                 choices: roleData
-            },{
+            },
+            {
                 type:"list",
                 message:"Choose the following manager:",
                 name:"manager_id",
