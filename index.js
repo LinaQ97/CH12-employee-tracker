@@ -69,7 +69,7 @@ function viewEmployees(){
 }
 
 function addDepartment(){
-    dbquery("SELECT id as value, name from department", (err, departmentData) =>{
+    dbquery("SELECT id as value, department as name from department", (err, departmentName) =>{
         inquirer.prompt([
             {
                 type:"input",
@@ -77,7 +77,7 @@ function addDepartment(){
                 name:"department_name"
             }
         ]).then(answer =>{
-            db.query("INSERT INTO department (department_name) VALUE(?)", [answer, department_name], err=>{
+            db.query("INSERT INTO department (department_name) VALUE(?)", [answer, departmentName], err=>{
                 viewDepartments()
             })
         })
